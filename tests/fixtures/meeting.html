@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  MANUAL TEST FIXTURE — Meeting chat panel
+  Load as a local file in Edge with the extension active.
+  URL must contain "/meeting/" for context detection.
+  extractMeetingChat() delegates to extractChat() then sets source="meeting-chat".
+
+  Selectors used by content.js:
+    Chat title      : [data-tid='chat-header-title']
+    Participants    : [data-tid='chat-header-participant']
+    Message root    : [data-tid='message-body']
+    Author          : [data-tid='message-author-name']
+    Timestamp       : time
+    Body            : [data-tid='message-body-content']
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teams Meeting Chat Fixture — /meeting/19:xyz789</title>
+</head>
+<body>
+
+  <!-- Meeting chat header -->
+  <header>
+    <span data-tid="chat-header-title">Sprint Review — May 4 2026</span>
+    <span data-tid="chat-header-participant">Alice Nguyen</span>
+    <span data-tid="chat-header-participant">Bob Martinez</span>
+    <span data-tid="chat-header-participant">Carol Smith</span>
+  </header>
+
+  <!-- ── Message 1 ── -->
+  <div data-tid="message-body">
+    <span data-tid="message-author-name">Alice Nguyen</span>
+    <time datetime="2026-05-04T10:01:00Z">Mon 10:01 AM</time>
+    <div data-tid="message-body-content">Sharing the demo link now: https://demo.internal/sprint-review</div>
+  </div>
+
+  <!-- ── Message 2 ── -->
+  <div data-tid="message-body">
+    <span data-tid="message-author-name">Bob Martinez</span>
+    <time datetime="2026-05-04T10:02:30Z">Mon 10:02 AM</time>
+    <div data-tid="message-body-content">+1 to the new caching strategy — that was the right call.</div>
+  </div>
+
+  <!-- ── Message 3 ── -->
+  <div data-tid="message-body">
+    <span data-tid="message-author-name">Carol Smith</span>
+    <time datetime="2026-05-04T10:04:00Z">Mon 10:04 AM</time>
+    <div data-tid="message-body-content">Question for the team: should the retry logic be configurable or hardcoded?</div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teams Extractor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="title">Teams Extractor</span>
+    <span id="hostDot" class="dot dot--unknown" title="Native host status"></span>
+  </header>
+
+  <section id="actions">
+    <button id="btnExtract">Extract Chat</button>
+    <button id="btnCaptionToggle">Start Caption Capture</button>
+  </section>
+
+  <section id="status">
+    <div id="statusMsg">Ready.</div>
+    <div id="lastExtracted"></div>
+  </section>
+
+  <details id="settingsPanel">
+    <summary>Settings</summary>
+    <label>Output directory
+      <input id="outputDir" type="text" placeholder="~/teams-extractor/data/">
+    </label>
+    <label>File naming
+      <select id="namingConvention">
+        <option value="by-date">By date</option>
+        <option value="by-source">By source</option>
+      </select>
+    </label>
+    <label>Scope
+      <select id="scope">
+        <option value="current">Current view</option>
+        <option value="all">All loaded messages</option>
+      </select>
+    </label>
+    <button id="btnSaveSettings">Save</button>
+  </details>
+
+  <script src="popup.js"></script>
+</body>
+</html>

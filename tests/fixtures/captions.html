@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--
+  MANUAL TEST FIXTURE — Live captions panel
+  Load as a local file in Edge with the extension active.
+
+  How to test:
+  1. Open the extension popup and click "Start Captions".
+  2. The content script will look for [data-tid='closed-captions-renderer'].
+  3. Dynamically insert new caption lines via the browser console to trigger
+     the MutationObserver:
+
+       const container = document.querySelector("[data-tid='closed-captions-renderer']");
+       const line = document.createElement("div");
+       line.setAttribute("data-tid", "closed-caption-text");
+       line.innerHTML = `<span class="caption-speaker">Alice Nguyen</span>Welcome to the meeting`;
+       container.appendChild(line);
+
+  4. Click "Stop Captions" — the extension will flush captionBuffer and the
+     native host should write the .md file.
+
+  Selectors used by content.js:
+    Container    : [data-tid='closed-captions-renderer']
+    Caption line : [data-tid='closed-caption-text']          (inside container)
+    Speaker      : [class*='caption-speaker']                (inside each line)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teams Live Captions Fixture</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    [data-tid="closed-captions-renderer"] { border: 1px solid #ccc; padding: 1rem; margin-top: 1rem; }
+    .caption-speaker { font-weight: bold; margin-right: 0.4rem; color: #0078d4; }
+    [data-tid="closed-caption-text"] { margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+
+  <h2>Live Captions (fixture)</h2>
+  <p>Open DevTools console and run the snippet in the comments above to add caption
+     lines dynamically so the MutationObserver fires.</p>
+
+  <!-- Captions container — this is what startCaptions() queries for -->
+  <div data-tid="closed-captions-renderer">
+
+    <!-- Pre-populated static captions (already marked extracted so the observer
+         won't double-fire on them — useful for checking the selector matches) -->
+
+    <div data-tid="closed-caption-text" data-te-extracted="1">
+      <span class="caption-speaker">Alice Nguyen</span>
+      Welcome everyone, let's get started with today's agenda.
+    </div>
+
+    <div data-tid="closed-caption-text" data-te-extracted="1">
+      <span class="caption-speaker">Bob Martinez</span>
+      Thanks Alice. I'll go through the Q1 metrics first.
+    </div>
+
+    <div data-tid="closed-caption-text" data-te-extracted="1">
+      <span class="caption-speaker">Carol Smith</span>
+      Could you share your screen so we can follow along?
+    </div>
+
+  </div>
+
+  <hr>
+  <h3>Console snippet — paste into DevTools to inject a live caption:</h3>
+  <pre style="background:#f4f4f4; padding:1rem;">
+const container = document.querySelector("[data-tid='closed-captions-renderer']");
+const line = document.createElement("div");
+line.setAttribute("data-tid", "closed-caption-text");
+line.innerHTML = `&lt;span class="caption-speaker"&gt;David Park&lt;/span&gt;Great, I can see it now.`;
+container.appendChild(line);
+  </pre>
+
+</body>
+</html>

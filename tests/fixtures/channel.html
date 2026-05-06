@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+  MANUAL TEST FIXTURE — Channel conversation
+  Load as a local file in Edge with the extension active.
+  URL must contain "/channel/" or "threadType=channel" for context detection.
+
+  Selectors used by content.js:
+    Channel name : [data-tid='channel-name']
+    Message root : [data-tid='message-body']
+    Author       : [data-tid='message-author-name']
+    Timestamp    : time
+    Body         : [data-tid='message-body-content']
+    Reply chain  : [data-tid='reply-chain']
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teams Channel Fixture — /channel/general?threadType=channel</title>
+</head>
+<body>
+
+  <!-- Channel name -->
+  <h1 data-tid="channel-name">General</h1>
+
+  <!-- ── Message 1 (top-level) ── -->
+  <div data-tid="message-body">
+    <span data-tid="message-author-name">Alice Nguyen</span>
+    <time datetime="2026-05-04T09:00:00Z">Mon 9:00 AM</time>
+    <div data-tid="message-body-content">Good morning everyone! Ready for the sprint review?</div>
+  </div>
+
+  <!-- ── Message 2 (top-level) ── -->
+  <div data-tid="message-body">
+    <span data-tid="message-author-name">Bob Martinez</span>
+    <time datetime="2026-05-04T09:02:00Z">Mon 9:02 AM</time>
+    <div data-tid="message-body-content">Morning Alice! Yes, I just pushed the last PR. Should be green.</div>
+  </div>
+
+  <!-- ── Message 3 with a reply ── -->
+  <div data-tid="message-body">
+    <span data-tid="message-author-name">Carol Smith</span>
+    <time datetime="2026-05-04T09:05:00Z">Mon 9:05 AM</time>
+    <div data-tid="message-body-content">I noticed a flaky test in the CI run. Anyone else seeing it?</div>
+  </div>
+
+  <!-- Reply chain wraps the reply message -->
+  <div data-tid="reply-chain">
+    <div data-tid="message-body">
+      <span data-tid="message-author-name">Bob Martinez</span>
+      <time datetime="2026-05-04T09:07:00Z">Mon 9:07 AM</time>
+      <div data-tid="message-body-content">Yes, it's the integration test for the auth module. I'll take a look.</div>
+    </div>
+  </div>
+
+</body>
+</html>

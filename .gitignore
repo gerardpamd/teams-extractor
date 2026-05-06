@@ -1,0 +1,28 @@
+# Data and output directories — never commit extracted conversations or generated reports
+data/
+output/
+
+# Environment and secrets
+*.env
+.env*
+**/api_key*
+**/credentials*
+**/secrets*
+*token*
+*password*
+*apikey*
+
+# Native messaging host manifest — contains extension ID, do not ship
+native-host/*.json
+
+# Python cache and test cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
