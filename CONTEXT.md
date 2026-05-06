@@ -138,21 +138,21 @@ Edge Browser                          WSL Filesystem
 
 #### 3.1 Testing
 - [ ] Content script: manual testing on Teams web against all 4 content types
-- [ ] Native host: unit tests for JSON→Markdown conversion
-- [ ] Agent pipeline: test with sample .md files
+- [x] Native host: unit tests for JSON→Markdown conversion
+- [x] Agent pipeline: test with sample .md files
 - [ ] End-to-end: extract → file → agent → output
 
 #### 3.2 Documentation
-- [ ] README.md — project overview, architecture, quickstart
-- [ ] INSTALL.md — step-by-step setup (extension load, native host register, registry)
-- [ ] USAGE.md — how to use each feature
-- [ ] Agent docs in each skill's SKILL.md
+- [x] README.md — project overview, architecture, quickstart
+- [x] INSTALL.md — step-by-step setup (extension load, native host register, registry)
+- [x] USAGE.md — how to use each feature
+- [x] Agent docs in each skill's SKILL.md
 
 #### 3.3 Ship to GitHub
-- [ ] Create GitHub repo
-- [ ] .gitignore (data/, output/, credentials)
-- [ ] Initial commit with full project
-- [ ] Tag v1.0.0
+- [x] Create GitHub repo
+- [x] .gitignore (data/, output/, credentials)
+- [x] Initial commit with full project
+- [x] Tag v1.0.0
 
 ---
 
