@@ -7,9 +7,15 @@ $hostDir  = "C:\teams-extractor-host"
 $jsonPath = "$hostDir\com.teams_extractor.writer.json"
 $regKey   = "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.teams_extractor.writer"
 
-# Resolve WSL username dynamically
-$wslUser = (wsl.exe whoami).Trim()
-if (-not $wslUser) { throw "Could not determine WSL username. Is WSL installed and configured?" }
+# Resolve WSL username from the UNC path of this script (avoids hanging wsl.exe call)
+# Path is like \\wsl.localhost\Ubuntu\home\<user>\...
+if ($PSScriptRoot -match '\\wsl\.localhost\\[^\\]+\\home\\([^\\]+)') {
+    $wslUser = $Matches[1]
+} else {
+    # Fallback: prompt rather than hang
+    $wslUser = Read-Host "Enter your WSL username"
+}
+if (-not $wslUser) { throw "Could not determine WSL username." }
 
 # Create host directory
 if (-not (Test-Path $hostDir)) { New-Item -ItemType Directory -Path $hostDir | Out-Null }
