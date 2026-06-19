@@ -23,7 +23,7 @@ if (-not (Test-Path $hostDir)) { New-Item -ItemType Directory -Path $hostDir | O
 # Generate run_host.bat with the correct WSL path for this machine
 @"
 @echo off
-wsl.exe python3 /home/$wslUser/teams-extractor/native-host/teams_writer.py
+%SystemRoot%\System32\wsl.exe -d Ubuntu-24.04 -- python3 /home/$wslUser/teams-extractor/native-host/teams_writer.py
 "@ | Set-Content "$hostDir\run_host.bat" -Encoding ASCII
 
 # Copy host manifest

@@ -34,91 +34,50 @@ function parseTimestamp(el) {
 
 // ─── Channel Extraction ───
 function extractChannel() {
-  const messages = querySelectorAll([
-    "[data-tid='message-body']",
-    ".ts-message-list-item",
-    "[class*='message-body']"
-  ]);
+  const messageEls = Array.from(document.querySelectorAll("[data-tid='chat-pane-message']"));
 
-  const channelNameEl = querySelector([
-    "[data-tid='channel-name']",
-    ".channel-name",
-    "h1[class*='channel']"
-  ]);
+  const channelNameEl = document.querySelector("h2.fui-StyledText") ||
+                        document.querySelector("[data-tid='channel-name']");
   const name = channelNameEl?.textContent.trim() || "unknown-channel";
 
-  return {
-    source: "channel",
-    name,
-    messages: messages.map((m) => {
-      const sender = querySelector([
-        "[data-tid='message-author-name']",
-        ".author",
-        "[class*='author-name']"
-      ], m)?.textContent.trim() || "Unknown";
+  const messages = messageEls.map((m) => {
+    const mid = m.getAttribute("data-mid");
+    if (!mid) return null;
 
-      const tsEl = querySelector(["time", "[data-tid='message-timestamp']"], m);
-      const timestamp = parseTimestamp(tsEl);
+    const sender    = document.getElementById("author-" + mid)?.textContent.trim() || "Unknown";
+    const tsEl      = document.getElementById("timestamp-" + mid);
+    const timestamp = parseTimestamp(tsEl);
+    const body      = document.getElementById("content-" + mid)?.innerText.trim() || "";
+    const isReply   = m.closest("[data-tid='reply-chain']") !== null ||
+                      m.getAttribute("data-is-reply") === "true";
 
-      const body = querySelector([
-        "[data-tid='message-body-content']",
-        ".message-body",
-        "[class*='message-content']"
-      ], m)?.innerText.trim() || "";
+    return { sender, timestamp, body, isReply };
+  }).filter((m) => m && m.body);
 
-      const isReply = m.closest("[data-tid='reply-chain']") !== null ||
-        m.closest("[class*='reply-chain']") !== null ||
-        m.getAttribute("data-is-reply") === "true";
-
-      return { sender, timestamp, body, isReply };
-    }).filter((m) => m.body)
-  };
+  return { source: "channel", name, messages };
 }
 
 // ─── Chat Extraction ───
 function extractChat() {
-  const messages = querySelectorAll([
-    "[data-tid='message-body']",
-    ".ts-message-list-item",
-    "[class*='chat-message']"
-  ]);
+  const messageEls = Array.from(document.querySelectorAll("[data-tid='chat-pane-message']"));
 
-  const participantEls = querySelectorAll([
-    "[data-tid='chat-header-participant']",
-    "[class*='participant-name']"
-  ]);
-  const participants = participantEls.map((p) => p.textContent.trim());
+  const nameEl = document.querySelector("h2.fui-StyledText") ||
+                 document.querySelector("[data-tid='chat-header-title']");
+  const name = nameEl?.textContent.trim() || "unknown-chat";
 
-  const nameEl = querySelector([
-    "[data-tid='chat-header-title']",
-    ".chat-title",
-    "[class*='conversation-title']"
-  ]);
-  const name = nameEl?.textContent.trim() || participants.join(", ") || "unknown-chat";
+  const messages = messageEls.map((m) => {
+    const mid = m.getAttribute("data-mid");
+    if (!mid) return null;
 
-  return {
-    source: "chat",
-    name,
-    participants,
-    messages: messages.map((m) => {
-      const sender = querySelector([
-        "[data-tid='message-author-name']",
-        ".author",
-        "[class*='author-name']"
-      ], m)?.textContent.trim() || "Unknown";
+    const sender = document.getElementById("author-" + mid)?.textContent.trim() || "Unknown";
+    const tsEl   = document.getElementById("timestamp-" + mid);
+    const timestamp = parseTimestamp(tsEl);
+    const body   = document.getElementById("content-" + mid)?.innerText.trim() || "";
 
-      const tsEl = querySelector(["time", "[data-tid='message-timestamp']"], m);
-      const timestamp = parseTimestamp(tsEl);
+    return { sender, timestamp, body };
+  }).filter((m) => m && m.body);
 
-      const body = querySelector([
-        "[data-tid='message-body-content']",
-        ".message-body",
-        "[class*='message-content']"
-      ], m)?.innerText.trim() || "";
-
-      return { sender, timestamp, body };
-    }).filter((m) => m.body)
-  };
+  return { source: "chat", name, participants: [], messages };
 }
 
 // ─── Meeting Chat Extraction ───
