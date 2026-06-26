@@ -181,12 +181,6 @@ function injectReplyBar(text) {
   // Idempotent — never show two bars
   if (document.getElementById("te-reply-bar")) return;
 
-  const composeBox = findComposeBox();
-  if (!composeBox) {
-    // Compose box not found yet — keep polling
-    return;
-  }
-
   // Stop polling while bar is displayed
   if (replyPollInterval) {
     clearInterval(replyPollInterval);
@@ -197,20 +191,25 @@ function injectReplyBar(text) {
   const bar = document.createElement("div");
   bar.id = "te-reply-bar";
   bar.style.cssText = [
+    "position: fixed",
+    "bottom: 80px",
+    "left: 50%",
+    "transform: translateX(-50%)",
+    "width: 560px",
+    "max-width: calc(100vw - 32px)",
     "display: flex",
     "flex-direction: column",
     "gap: 6px",
     "padding: 8px 12px",
-    "margin: 0 0 4px 0",
     "background: #f3f2f1",
     "border: 1px solid #c8c6c4",
-    "border-radius: 4px",
+    "border-radius: 6px",
+    "box-shadow: 0 4px 16px rgba(0,0,0,0.18)",
     "font-family: 'Segoe UI', sans-serif",
     "font-size: 13px",
     "color: #201f1e",
-    "z-index: 9999",
+    "z-index: 999999",
     "box-sizing: border-box",
-    "max-width: 100%",
   ].join("; ");
 
   // Header row: label + dismiss button
@@ -276,19 +275,25 @@ function injectReplyBar(text) {
     "cursor: pointer",
   ].join("; ");
   pasteBtn.addEventListener("click", () => {
-    const box = findComposeBox();
-    if (box) {
-      box.focus();
-      // Insert text at cursor / replace selection; fall back to setting innerText
-      const inserted = document.execCommand("insertText", false, text);
-      if (!inserted) {
-        box.innerText = text;
+    navigator.clipboard.writeText(text).then(() => {
+      pasteBtn.textContent = "Copied! Now press Ctrl+V in chat →";
+      pasteBtn.style.background = "#107c10";
+      // Auto-dismiss after 8 seconds so bar doesn't linger
+      setTimeout(() => {
+        removeReplyBar();
+        startReplyPoller();
+      }, 8000);
+    }).catch(() => {
+      // Clipboard API blocked — fall back to execCommand
+      const box = findComposeBox();
+      if (box) {
+        box.focus();
+        document.execCommand("insertText", false, text);
+        box.dispatchEvent(new Event("input", { bubbles: true }));
       }
-      // Dispatch input event so Teams' React/Vue layer picks up the change
-      box.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-    removeReplyBar();
-    startReplyPoller(); // resume polling in case another reply is staged later
+      removeReplyBar();
+      startReplyPoller();
+    });
   });
 
   footer.appendChild(pasteBtn);
@@ -297,11 +302,7 @@ function injectReplyBar(text) {
   bar.appendChild(preview);
   bar.appendChild(footer);
 
-  // Insert bar directly above the compose box's parent container
-  const anchor = composeBox.parentElement || composeBox;
-  anchor.parentElement
-    ? anchor.parentElement.insertBefore(bar, anchor)
-    : document.body.appendChild(bar);
+  document.body.appendChild(bar);
 }
 
 function pollForPendingReply() {
