@@ -26,6 +26,7 @@ def write_message(payload):
 # ─── Path Helpers ───
 
 _HOME = os.path.expanduser("~")
+_PENDING_REPLY_PATH = os.path.join(_HOME, "teams-extractor", "output", "pending-reply.txt")
 
 def resolve_output_dir(settings):
     raw = settings.get("outputDir", "~/teams-extractor/data/")
@@ -89,6 +90,29 @@ def messages_to_markdown(data):
 
     return "\n".join(lines)
 
+# ─── Pending Reply Handlers ───
+
+def handle_read_pending_reply():
+    """Read pending-reply.txt, delete it, and return its content."""
+    if not os.path.exists(_PENDING_REPLY_PATH):
+        return {"ok": False, "error": "No pending reply"}
+    try:
+        with open(_PENDING_REPLY_PATH, "r", encoding="utf-8") as f:
+            text = f.read()
+        os.remove(_PENDING_REPLY_PATH)
+        return {"ok": True, "text": text}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+def handle_discard_pending_reply():
+    """Delete pending-reply.txt if it exists."""
+    try:
+        if os.path.exists(_PENDING_REPLY_PATH):
+            os.remove(_PENDING_REPLY_PATH)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
 # ─── Main Loop ───
 
 def main():
@@ -101,6 +125,15 @@ def main():
 
         if msg is None:
             break
+
+        # ─── Pending Reply Commands ───
+        if msg.get("type") == "READ_PENDING_REPLY":
+            write_message(handle_read_pending_reply())
+            continue
+
+        if msg.get("type") == "DISCARD_PENDING_REPLY":
+            write_message(handle_discard_pending_reply())
+            continue
 
         try:
             # Caption flush message — reconstruct as standard data dict, preserving settings

@@ -94,4 +94,20 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     });
     return false;
   }
+
+  // ─── Pending Reply Routing ───
+
+  if (msg.type === "GET_PENDING_REPLY") {
+    sendToNative({ type: "READ_PENDING_REPLY" })
+      .then((res) => sendResponse(res))
+      .catch((err) => sendResponse({ ok: false, error: String(err) }));
+    return true; // async response
+  }
+
+  if (msg.type === "DISCARD_PENDING_REPLY") {
+    sendToNative({ type: "DISCARD_PENDING_REPLY" })
+      .then((res) => sendResponse(res))
+      .catch((err) => sendResponse({ ok: false, error: String(err) }));
+    return true; // async response
+  }
 });

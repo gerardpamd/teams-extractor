@@ -151,6 +151,176 @@ setInterval(() => {
   }
 }, 1000);
 
+// ─── Staged Reply Bar ───
+
+// Compose box fallback selectors (Teams DOM varies by version/channel/chat context).
+// Run the diagnostic snippet in DevTools if none of these match:
+//   document.querySelectorAll('[contenteditable="true"]') — pick the compose box element,
+//   then right-click → Copy selector to get a stable path.
+const COMPOSE_SELECTORS = [
+  "[data-tid='ckeditor']",
+  "[data-tid='compose-editor']",
+  "[class*='ql-editor']",
+  "[contenteditable='true'][role='textbox']",
+  "[contenteditable='true'][data-tid]",
+  "div[contenteditable='true']",
+];
+
+let replyPollInterval = null;
+
+function findComposeBox() {
+  return querySelector(COMPOSE_SELECTORS);
+}
+
+function removeReplyBar() {
+  const existing = document.getElementById("te-reply-bar");
+  if (existing) existing.remove();
+}
+
+function injectReplyBar(text) {
+  // Idempotent — never show two bars
+  if (document.getElementById("te-reply-bar")) return;
+
+  const composeBox = findComposeBox();
+  if (!composeBox) {
+    // Compose box not found yet — keep polling
+    return;
+  }
+
+  // Stop polling while bar is displayed
+  if (replyPollInterval) {
+    clearInterval(replyPollInterval);
+    replyPollInterval = null;
+  }
+
+  // ─── Build bar ───
+  const bar = document.createElement("div");
+  bar.id = "te-reply-bar";
+  bar.style.cssText = [
+    "display: flex",
+    "flex-direction: column",
+    "gap: 6px",
+    "padding: 8px 12px",
+    "margin: 0 0 4px 0",
+    "background: #f3f2f1",
+    "border: 1px solid #c8c6c4",
+    "border-radius: 4px",
+    "font-family: 'Segoe UI', sans-serif",
+    "font-size: 13px",
+    "color: #201f1e",
+    "z-index: 9999",
+    "box-sizing: border-box",
+    "max-width: 100%",
+  ].join("; ");
+
+  // Header row: label + dismiss button
+  const header = document.createElement("div");
+  header.style.cssText = "display: flex; align-items: center; justify-content: space-between;";
+
+  const label = document.createElement("span");
+  label.style.cssText = "font-weight: 600; font-size: 12px; color: #605e5c;";
+  label.textContent = "📋 Claude Reply (staged)";
+
+  const dismissBtn = document.createElement("button");
+  dismissBtn.textContent = "✕";
+  dismissBtn.title = "Discard reply";
+  dismissBtn.style.cssText = [
+    "background: none",
+    "border: none",
+    "cursor: pointer",
+    "font-size: 14px",
+    "color: #605e5c",
+    "padding: 0 2px",
+    "line-height: 1",
+  ].join("; ");
+  dismissBtn.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ type: "DISCARD_PENDING_REPLY" }, () => {
+      removeReplyBar();
+      startReplyPoller(); // resume polling for next staged reply
+    });
+  });
+
+  header.appendChild(label);
+  header.appendChild(dismissBtn);
+
+  // Preview text
+  const preview = document.createElement("div");
+  preview.style.cssText = [
+    "background: #ffffff",
+    "border: 1px solid #e1dfdd",
+    "border-radius: 3px",
+    "padding: 6px 8px",
+    "max-height: 80px",
+    "overflow-y: auto",
+    "white-space: pre-wrap",
+    "word-break: break-word",
+    "font-size: 13px",
+    "color: #201f1e",
+  ].join("; ");
+  preview.textContent = text;
+
+  // Footer row: paste button
+  const footer = document.createElement("div");
+  footer.style.cssText = "display: flex; justify-content: flex-end;";
+
+  const pasteBtn = document.createElement("button");
+  pasteBtn.textContent = "Paste into chat →";
+  pasteBtn.style.cssText = [
+    "background: #6264a7",
+    "color: #ffffff",
+    "border: none",
+    "border-radius: 3px",
+    "padding: 5px 12px",
+    "font-size: 13px",
+    "font-family: 'Segoe UI', sans-serif",
+    "cursor: pointer",
+  ].join("; ");
+  pasteBtn.addEventListener("click", () => {
+    const box = findComposeBox();
+    if (box) {
+      box.focus();
+      // Insert text at cursor / replace selection; fall back to setting innerText
+      const inserted = document.execCommand("insertText", false, text);
+      if (!inserted) {
+        box.innerText = text;
+      }
+      // Dispatch input event so Teams' React/Vue layer picks up the change
+      box.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    removeReplyBar();
+    startReplyPoller(); // resume polling in case another reply is staged later
+  });
+
+  footer.appendChild(pasteBtn);
+
+  bar.appendChild(header);
+  bar.appendChild(preview);
+  bar.appendChild(footer);
+
+  // Insert bar directly above the compose box's parent container
+  const anchor = composeBox.parentElement || composeBox;
+  anchor.parentElement
+    ? anchor.parentElement.insertBefore(bar, anchor)
+    : document.body.appendChild(bar);
+}
+
+function pollForPendingReply() {
+  chrome.runtime.sendMessage({ type: "GET_PENDING_REPLY" }, (res) => {
+    if (chrome.runtime.lastError) return; // extension context invalidated
+    if (res && res.ok && res.text) {
+      injectReplyBar(res.text);
+    }
+  });
+}
+
+function startReplyPoller() {
+  if (replyPollInterval) return; // already running
+  replyPollInterval = setInterval(pollForPendingReply, 3000);
+}
+
+// Kick off the poller as soon as the content script loads
+startReplyPoller();
+
 // ─── Message Listener ───
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === "EXTRACT") {
